@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.venv/
+
+# Security configuration
+.env
+
+# dbt artifacts & logs
+target/
+dbt_packages/
+logs/
+
+# Local Docker
+.docker-data/
+data/
