@@ -1,9 +1,9 @@
 # Business Problem and Scope
 
 ## Document Changelog
-| Version | Author | Description|
-|:-|:-|:-|
-| v1.0   | Litaaya | Initial draft for Core Single-Currency Wallet |
+| Version | Author  | Description                                   |
+|:--------|:--------|:----------------------------------------------|
+| v1.0    | Litaaya | Initial draft for Core Single-Currency Wallet |
 
 ---
 

@@ -37,7 +37,7 @@ For detailed business requirements, accounting rules, and constraints:
 ## Roadmap and Progress
 - Phase 1: Definition & Data Semantics:
 - [x] 1.1 Business Scope: Defined core entities and 5 transaction types. (docs/problem_and_scope.md)
-- [ ] 1.2 Invariants Checklist: Formulated data integrity rules. (docs/invariants.md)
+- [x] 1.2 Invariants Checklist: Formulated data integrity rules. (docs/invariants.md)
 
 - Phase 2: Data Model Layer
 - [ ] 2.1 Schema Design: Drafted Medallion architecture (Bronze/Silver/Gold). (docs/data_model.md)
