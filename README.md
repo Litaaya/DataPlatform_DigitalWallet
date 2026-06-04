@@ -40,8 +40,8 @@ For detailed business requirements, accounting rules, and constraints:
 - [x] 1.2 Invariants Checklist: Formulated data integrity rules. (docs/invariants.md)
 
 - Phase 2: Data Model Layer
-- [ ] 2.1 Schema Design: Drafted Medallion architecture (Bronze/Silver/Gold). (docs/data_model.md)
-- [ ] 2.2 Balance Logic: Designed pseudo-SQL for historical balance derivation. (docs/balance_logic.md)
+- [x] 2.1 Schema Design: Drafted Medallion architecture (Bronze/Silver/Gold). (docs/data_model.md)
+- [x] 2.2 Balance Logic: Designed pseudo-SQL for historical balance derivation. (docs/balance_logic.md)
 
 - Phase 3: Platform Skeleton (Infra)
 - [ ] 3.1 Repo Setup: Initialized WSL2, directory structure, and Makefile.
