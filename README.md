@@ -44,8 +44,8 @@ For detailed business requirements, accounting rules, and constraints:
 - [x] 2.2 Balance Logic: Designed pseudo-SQL for historical balance derivation. (docs/balance_logic.md)
 
 - Phase 3: Platform Skeleton (Infra)
-- [ ] 3.1 Repo Setup: Initialized WSL2, directory structure, and Makefile.
-- [ ] 3.2 Docker Compose: Containers for Kafka, MinIO, and Postgres are running.
+- [x] 3.1 Repo Setup: Initialized WSL2, directory structure, and Makefile.
+- [x] 3.2 Docker Compose: Containers for Kafka, MinIO, and Postgres are running.
 
 - Phase 4: Data Generation
 - [ ] 4.1 Generator Spec: Event JSON v1 schema defined.
