@@ -48,8 +48,8 @@ For detailed business requirements, accounting rules, and constraints:
 - [x] 3.2 Docker Compose: Containers for Kafka, MinIO, and Postgres are running.
 
 - Phase 4: Data Generation
-- [ ] 4.1 Generator Spec: Event JSON v1 schema defined.
-- [ ] 4.2 Python Producer: Capable of streaming valid/invalid transactions into Kafka.
+- [x] 4.1 Generator Spec: Event JSON v1 schema defined.
+- [x] 4.2 Python Producer: Capable of streaming valid/invalid transactions into Kafka.
 
 - Phase 5: Streaming Ingestion
 - [ ] 5.1 S3 Sink: Kafka Connect successfully streams data into MinIO partition by date.
