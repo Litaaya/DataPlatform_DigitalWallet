@@ -64,8 +64,40 @@ services:
       DYNAMIC_CONFIG_ENABLED: 'true'
       KAFKA_CLUSTERS_0_NAME: local-wallet-kafka
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: local-wallet-connect
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://kafka-connect:8083
     depends_on:
       - kafka
+    networks:
+      - wallet_network
+
+  # 5. Ingestion Layer: Kafka connect (S3 sink for MinIO)
+  kafka-connect:
+    build:
+      context: .
+      dockerfile: Dockerfile.connect
+    container_name: wallet_kafka_connect
+    ports:
+      - "8083:8083"
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: 'kafka:29092'
+      CONNECT_REST_PORT: 8083
+      CONNECT_REST_ADVERTISED_HOST_NAME: 'kafka-connect'
+      CONNECT_GROUP_ID: 'wallet-connect-group'
+      CONNECT_CONFIG_STORAGE_TOPIC: 'wallet-connect-configs'
+      CONNECT_OFFSET_STORAGE_TOPIC: 'wallet-connect-offsets'
+      CONNECT_STATUS_STORAGE_TOPIC: 'wallet-connect-status'
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
+      CONNECT_VALUE_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
+      CONNECT_INTERNAL_KEY_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
+      CONNECT_INTERNAL_VALUE_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
+      CONNECT_PLUGIN_PATH: '/usr/share/java,/usr/share/confluent-hub-components'
+    depends_on:
+      - kafka
+      - minio
     networks:
       - wallet_network
 

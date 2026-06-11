@@ -52,7 +52,7 @@ For detailed business requirements, accounting rules, and constraints:
 - [x] 4.2 Python Producer: Capable of streaming valid/invalid transactions into Kafka.
 
 - Phase 5: Streaming Ingestion
-- [ ] 5.1 S3 Sink: Kafka Connect successfully streams data into MinIO partition by date.
+- [x] 5.1 S3 Sink: Kafka Connect successfully streams data into MinIO partition by date.
 - [ ] 5.2 Observability: Monitoring consumer lag via Kafka UI.
 
 - Phase 6: Batch ELT (dbt + DuckDB)
