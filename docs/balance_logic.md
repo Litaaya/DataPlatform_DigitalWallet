@@ -2,9 +2,10 @@
 
 ## Document Changelog
 
-| Version | Author | Description                                           |
-|:--------|:-------|:------------------------------------------------------|
-| v1.1    | Litaaya| Initial pseudo-SQL for balance computation & snapshots|
+| Version | Author  | Description                                            |
+|:--------|:--------|:-------------------------------------------------------|
+| v1.0    | Litaaya | Initial pseudo-SQL for balance computation & snapshots |
+| v1.1    | Litaaya | Change the formula of daily eod                        |
 
 ---
 

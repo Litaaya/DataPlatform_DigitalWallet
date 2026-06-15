@@ -4,7 +4,7 @@
 
 | Version | Author  | Description                                    |
 |:--------|:--------|:-----------------------------------------------|
-| v1.0    | Litaaya | Initial Medallion schema design and ERD layout |
+| v1.1    | Litaaya | Initial Medallion schema design and ERD layout |
 
 ---
 
