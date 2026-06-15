@@ -58,7 +58,6 @@ def get_already_processed_files(conn):
 
 def load_minio_to_postgres():
     s3_client = boto3.client('s3', **{k: v for k, v in MINIO_CONFIG.items() if k != 'bucket_name'})
-    print("DEBUG CREDENTIALS:", POSTGRES_CONFIG)
     pg_conn = psycopg2.connect(**POSTGRES_CONFIG)
 
     try:
