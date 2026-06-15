@@ -25,7 +25,7 @@ graph LR
     end
 
     subgraph Storage_Layer ["Data Lake (Bronze)"]
-        MinIO["MinIO <br> (Parquet Files)"]:::storageStyle
+        MinIO["MinIO <br> (JSON Files)"]:::storageStyle
     end
 
     subgraph Transformation_Layer ["Batch ELT (Medallion)"]
