@@ -27,8 +27,7 @@
   </component>
   <component name="DBNavigator.Project.DatabaseConsoleManager">
     <connection id="e68182da-0450-4120-8dcd-f79ecc4eef8f">
-      <console name="Connection" type="STANDARD" schema="analytics_silver" session="Main"><![CDATA[select count(*)
- from analytics_silver.silver_wallet_transactions;]]></console>
+      <console name="Connection" type="STANDARD" schema="analytics_silver" session="Main"><![CDATA[select * from analytics_gold.gold_ledger_reconciliation;]]></console>
       <console name="wallet_db" type="STANDARD" schema="wallet_db" session="Main" />
     </connection>
   </component>
@@ -91,7 +90,7 @@
           <session-user value="wallet_admin" />
         </database>
         <properties>
-          <auto-commit value="false" />
+          <auto-commit value="true" />
         </properties>
         <ssh-settings>
           <active value="false" />
