@@ -60,10 +60,10 @@ For detailed business requirements, accounting rules, and constraints:
   - [x] 6.2 dbt Environment Setup: Initializing dbt project and configuring `profiles.yml` for PostgreSQL warehouse connection.
   - [x] 6.3 Silver Layer (Transformation): Implement deduplication (handling duplicate UUIDs), filtering negative amounts, and strict type casting using dbt models.
   - [x] 6.4 Gold Layer (Analytics Marts): Build double-entry ledger reconstruction and daily financial volume aggregations.
-  - [ ] 6.5 Data Quality & Auditing: Pass automated dbt tests (`unique`, `not_null`, `accepted_values`) and data reconciliation logic.
+  - [x] 6.5 Data Quality & Auditing: Pass automated dbt tests (`unique`, `not_null`, `accepted_values`) and data reconciliation logic.
 
 - **Phase 7: Pipeline Orchestration**
-  - [ ] 7.1 DAG Scheduling: Automate and orchestrate the Python loader and dbt transformation runs via Apache Airflow.
+  - [x] 7.1 DAG Scheduling: Automate and orchestrate the Python loader and dbt transformation runs via Apache Airflow.
 
 - **Phase 8: Business Intelligence & Visualization**
   - [ ] 8.1 Financial Dashboard: Connect Metabase/PowerBI to PostgreSQL Gold layer to build a real-time audit monitor.

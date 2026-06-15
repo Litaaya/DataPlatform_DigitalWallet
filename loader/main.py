@@ -14,17 +14,21 @@ load_dotenv(dotenv_path=env_path)
 # Log display configuration
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
+DB_PORT = os.getenv("DB_PORT", "5433")
+MINIO_HOST = os.getenv("MINIO_HOST", "localhost")
+
 # Configuration parameters
 MINIO_CONFIG = {
-    "endpoint_url": "http://localhost:9000",
+    "endpoint_url": f"http://{MINIO_HOST}:9000",
     "aws_access_key_id": os.getenv("MINIO_ROOT_USER"),
     "aws_secret_access_key": os.getenv("MINIO_ROOT_PASSWORD"),
     "bucket_name": "wallet-analytics"
 }
 
 POSTGRES_CONFIG = {
-    "host": "127.0.0.1",
-    "port": "5433",
+    "host": DB_HOST,
+    "port": DB_PORT,
     "user": os.getenv("POSTGRES_USER"),
     "password": os.getenv("POSTGRES_PASSWORD"),
     "database": os.getenv("POSTGRES_DB")
@@ -58,9 +62,10 @@ def get_already_processed_files(conn):
 
 def load_minio_to_postgres():
     s3_client = boto3.client('s3', **{k: v for k, v in MINIO_CONFIG.items() if k != 'bucket_name'})
-    pg_conn = psycopg2.connect(**POSTGRES_CONFIG)
+    pg_conn = None
 
     try:
+        pg_conn = psycopg2.connect(**POSTGRES_CONFIG)
         init_postgres_table(pg_conn)
         processed_files = get_already_processed_files(pg_conn)
 
