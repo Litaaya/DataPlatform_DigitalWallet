@@ -2,9 +2,9 @@
 
 ## Document Changelog
 
-| Version  | Author | Description                                           |
-|:---------|:-------|:------------------------------------------------------|
-| v1.0     | Litaaya| Initial pseudo-SQL for balance computation & snapshots|
+| Version | Author | Description                                           |
+|:--------|:-------|:------------------------------------------------------|
+| v1.1    | Litaaya| Initial pseudo-SQL for balance computation & snapshots|
 
 ---
 
@@ -35,14 +35,32 @@ GROUP BY account_id;
 To generate the historical daily snapshots for the `gold_balance_snapshot_daily` table:
 
 ```sql
+WITH daily_changes AS (
+    SELECT 
+        account_id,
+        CAST(event_time AS DATE) AS snapshot_date,
+        SUM(amount) AS daily_net_change
+    FROM gold_ledger_entries
+    GROUP BY account_id, CAST(event_time AS DATE)
+),
+historical_range AS (
+    SELECT 
+        account_id,
+        snapshot_date,
+        SUM(daily_net_change) OVER (
+            PARTITION BY account_id 
+            ORDER BY snapshot_date
+            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+        ) AS end_of_day_balance
+    FROM daily_changes
+)
 SELECT 
-    CONCAT(account_id, '_', CAST(event_time AS DATE)) AS snapshot_id,
+    CONCAT(account_id, '_', snapshot_date) AS snapshot_id,
     account_id,
-    CAST(event_time AS DATE) AS snapshot_date,
-    SUM(amount) AS end_of_day_balance,
+    snapshot_date,
+    end_of_day_balance,
     CURRENT_TIMESTAMP AS computed_at
-FROM gold_ledger_entries
-GROUP BY account_id, CAST(event_time AS DATE);
+FROM historical_range;
 ```
 
 ## 3. Rushed Late-Arriving Event Policy (WIP)
