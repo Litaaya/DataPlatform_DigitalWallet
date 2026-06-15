@@ -4,7 +4,7 @@ An end-to-end production-grade data platform designed for a single-currency (USD
 
 ---
 
-## Data Architecture (will be drawn completely later)
+## Data Architecture
 
 The platform implements a Medallion Architecture combining real-time streaming ingestion and batch ELT processing:
 
