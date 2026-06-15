@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: silver_wallet_transactions
+    description: "The table containing wallet transaction data has been refined and cleaned"
+    columns:
+      - name: transaction_id
+        description: "Each transaction event has a unique UUID"
+        tests:
+          - unique
+          - not_null
+
+      - name: amount
+        description: "The amount generated from the transaction"
+        tests:
+          - not_null
+
+  - name: gold_ledger_reconciliation
+    description: "Double-entry bookkeeping reconciliation is used to detect cash flow discrepancies"
+    columns:
+      - name: transfer_id
+        tests:
+          - not_null
