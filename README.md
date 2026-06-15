@@ -8,13 +8,56 @@ An end-to-end production-grade data platform designed for a single-currency (USD
 
 The platform implements a Medallion Architecture combining real-time streaming ingestion and batch ELT processing:
 
-Raw Events (App) ──> Kafka ──(Kafka Connect S3 Sink)──> MinIO (Bronze / Parquet)
-                                                           │
-                                                      (dbt + DuckDB)
-                                                           │
-Postgres (Mart / Serving) <── Gold (Ledger & Recon) <── Silver (Cleaned)
-         │
-  (Metabase/PowerBI)
+```mermaid
+graph LR
+    classDef appStyle fill:#f9f9f9,stroke:#333,stroke-width:2px;
+    classDef streamingStyle fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
+    classDef storageStyle fill:#efebe9,stroke:#5d4037,stroke-width:2px;
+    classDef dbtStyle fill:#fbe9e7,stroke:#e64a19,stroke-width:2px;
+    classDef dbStyle fill:#e8f5e9,stroke:#388e3c,stroke-width:2px;
+    classDef biStyle fill:#fffde7,stroke:#fbc02d,stroke-width:2px;
+
+    App["Raw Events (App)"]:::appStyle
+    
+    subgraph Streaming_Layer ["Streaming Ingestion"]
+        Kafka["Apache Kafka"]:::streamingStyle
+        KConnect["Kafka Connect <br> (S3 Sink)"]:::streamingStyle
+    end
+
+    subgraph Storage_Layer ["Data Lake (Bronze)"]
+        MinIO["MinIO <br> (Parquet Files)"]:::storageStyle
+    end
+
+    subgraph Transformation_Layer ["Batch ELT (Medallion)"]
+        direction TB
+        Loader["Python Loader"]:::dbtStyle
+        Silver["Silver Stage <br> (Cleaned Data)"]:::dbtStyle
+        Gold["Gold Stage <br> (Ledger & Recon)"]:::dbtStyle
+        
+        Loader --> Silver
+        Silver -->|dbt + Postgres| Gold
+    end
+
+    subgraph Serving_Layer ["Data Mart / Serving"]
+        Postgres[("Postgres <br> (Mart / Serving)")]:::dbStyle
+    end
+
+    subgraph BI_Layer ["Visualization"]
+        BI["Metabase / PowerBI"]:::biStyle
+    end
+
+    App --> Kafka
+    Kafka --> KConnect
+    KConnect --> MinIO
+    MinIO --> Loader
+    Gold --> Postgres
+    Postgres --> BI
+
+    style Streaming_Layer fill:#f6fafd,stroke:#0288d1,stroke-dasharray: 5 5
+    style Storage_Layer fill:#faf8f7,stroke:#5d4037,stroke-dasharray: 5 5
+    style Transformation_Layer fill:#fffbfb,stroke:#e64a19,stroke-dasharray: 5 5
+    style Serving_Layer fill:#f7fbf7,stroke:#388e3c,stroke-dasharray: 5 5
+```
 
 ## Documentation:
 For detailed business requirements, accounting rules, and constraints:
@@ -23,16 +66,23 @@ For detailed business requirements, accounting rules, and constraints:
 - [Data Model: Schema Design](docs/data_model.md)
 - [Data Model: Balance Logic](docs/balance_logic.md)
 
-## Tech Stack and Core Concepts:
+## Tech Stack and Core Concepts
 - Infrastructure: Docker & WSL2 (Ubuntu) for localized environment orchestration.
 - Streaming Ingestion: Apache Kafka & Kafka UI for event streaming; Kafka Connect (S3 Sink) for landing raw events.
-- Storage / Data Lake: MinIO (S3-compatible object storage) storing append-only historical Parquet files.
-- Compute / Transformation: DuckDB for lightning-fast OLAP processing embedded within dbt (Data Build Tool) for modular SQL modeling.
-- Serving Layer: PostgreSQL for production data mart rendering.
+- Storage / Data Lake: MinIO (S3-compatible object storage) storing append-only historical raw JSON logs.
+- Compute / Transformation: PostgreSQL acting as the local Data Warehouse, managed dynamically by dbt (Data Build Tool) for modular SQL modeling, schema isolation, and data lineages.
+- Orchestration: Apache Airflow (Standalone) automating and managing dependency workflows.
 - Data Quality & Audit: Built-in dbt data tests alongside custom Double-Entry Ledger Reconciliation pipelines.
 
-## Setup (incoming)
-- ...
+## Setup
+```
+# Spin up the entire Data Platform (Kafka, MinIO, Postgres, Airflow)
+.\run.ps1 up
+
+# Shut down and clean up resources
+.\run.ps1 down
+```
+- Access the Airflow UI at http://localhost:8085 to monitor the automated pipeline.
 
 ## Roadmap and Progress
 - **Phase 1: Definition & Data Semantics**
