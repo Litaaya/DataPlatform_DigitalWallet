@@ -35,40 +35,42 @@ For detailed business requirements, accounting rules, and constraints:
 - ...
 
 ## Roadmap and Progress
-- Phase 1: Definition & Data Semantics:
-- [x] 1.1 Business Scope: Defined core entities and 5 transaction types. (docs/problem_and_scope.md)
-- [x] 1.2 Invariants Checklist: Formulated data integrity rules. (docs/invariants.md)
+- **Phase 1: Definition & Data Semantics**
+  - [x] 1.1 Business Scope: Defined core entities and 5 transaction types. (`docs/problem_and_scope.md`)
+  - [x] 1.2 Invariants Checklist: Formulated data integrity rules. (`docs/invariants.md`)
 
-- Phase 2: Data Model Layer
-- [x] 2.1 Schema Design: Drafted Medallion architecture (Bronze/Silver/Gold). (docs/data_model.md)
-- [x] 2.2 Balance Logic: Designed pseudo-SQL for historical balance derivation. (docs/balance_logic.md)
+- **Phase 2: Data Model Layer**
+  - [x] 2.1 Schema Design: Drafted Medallion architecture (Bronze/Silver/Gold). (`docs/data_model.md`)
+  - [x] 2.2 Balance Logic: Designed pseudo-SQL for historical balance derivation. (`docs/balance_logic.md`)
 
-- Phase 3: Platform Skeleton (Infra)
-- [x] 3.1 Repo Setup: Initialized WSL2, directory structure, and Makefile.
-- [x] 3.2 Docker Compose: Containers for Kafka, MinIO, and Postgres are running.
+- **Phase 3: Platform Skeleton (Infra)**
+  - [x] 3.1 Repo Setup: Initialized WSL2, directory structure, and environment configs.
+  - [x] 3.2 Docker Compose: Containers for Kafka, Kafka Connect, MinIO, and Postgres are up and running.
 
-- Phase 4: Data Generation
-- [x] 4.1 Generator Spec: Event JSON v1 schema defined.
-- [x] 4.2 Python Producer: Capable of streaming valid/invalid transactions into Kafka.
+- **Phase 4: Data Generation**
+  - [x] 4.1 Generator Spec: Event JSON v1 schema defined with double-entry and anomaly injection logic.
+  - [x] 4.2 Python Producer: Capable of streaming valid/invalid transactions into Kafka.
 
-- Phase 5: Streaming Ingestion
-- [x] 5.1 S3 Sink: Kafka Connect successfully streams data into MinIO partition by date.
-- [ ] 5.2 Observability: Monitoring consumer lag via Kafka UI.
+- **Phase 5: Streaming Ingestion (Data Lake)**
+  - [x] 5.1 S3 Sink: Configured Kafka Connect S3 Sink to stream real-time data into MinIO partition by date.
+  - [x] 5.2 Observability: Monitoring data pipeline and connector status via Kafka UI.
 
-- Phase 6: Batch ELT (dbt + DuckDB)
-- [ ] 6.1 Silver Layer: Deduplication and type casting logic implemented.
-- [ ] 6.2 Gold Layer: Double-entry ledger generation setup.
-- [ ] 6.3 Reconciliation: Auto daily auditing logic developed.
-- [ ] 6.4 Data Quality: Passed all unique, not_null, and accepted_values dbt tests.
+- **Phase 6: Batch ELT & Data Warehousing (Python + dbt + PostgreSQL)**
+  - [x] 6.1 Bronze Layer (Raw Ingestion): Developed an idempotent Python script (`loader/main.py`) to bulk load raw JSON from MinIO to Postgres `raw` schema.
+  - [ ] 6.2 dbt Environment Setup: Initializing dbt project and configuring `profiles.yml` for PostgreSQL warehouse connection.
+  - [ ] 6.3 Silver Layer (Transformation): Implement deduplication (handling duplicate UUIDs), filtering negative amounts, and strict type casting using dbt models.
+  - [ ] 6.4 Gold Layer (Analytics Marts): Build double-entry ledger reconstruction and daily financial volume aggregations.
+  - [ ] 6.5 Data Quality & Auditing: Pass automated dbt tests (`unique`, `not_null`, `accepted_values`) and data reconciliation logic.
 
-- Phase 7 & 8: Orchestration & Dashboard
-- [ ] 7.1 DAG Scheduling: Orchestrated pipeline runs via Airflow/Cron.
-- [ ] 8.1 Data Mart: Materialized Gold layer into PostgreSQL.
-- [ ] 8.2 Analytics: Built financial audit dashboard via Metabase/PowerBI.
+- **Phase 7: Pipeline Orchestration**
+  - [ ] 7.1 DAG Scheduling: Automate and orchestrate the Python loader and dbt transformation runs via Apache Airflow.
 
-- Phase 9: Advanced Extensions
-- [ ] Idempotency / Exactly-once strategy.
-- [ ] Late-event backfilling policy.
+- **Phase 8: Business Intelligence & Visualization**
+  - [ ] 8.1 Financial Dashboard: Connect Metabase/PowerBI to PostgreSQL Gold layer to build a real-time audit monitor.
+
+- **Phase 9: Advanced Production Engineering**
+  - [ ] Exactly-once processing strategy validation.
+  - [ ] Late-arriving event backfilling policy.
 
 ## Convention Commits Rule
 - [FEAT] - New features/pipelines.
