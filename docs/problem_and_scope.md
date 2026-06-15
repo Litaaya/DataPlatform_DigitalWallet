@@ -1,9 +1,10 @@
 # Business Problem and Scope
 
 ## Document Changelog
-| Version | Author  | Description                                   |
-|:--------|:--------|:----------------------------------------------|
-| v1.0    | Litaaya | Initial draft for Core Single-Currency Wallet |
+| Version | Author  | Description                                           |
+|:--------|:--------|:------------------------------------------------------|
+| v1.0    | Litaaya | Initial draft for Core Single-Currency Wallet         |
+| v1.1    | Litaaya | Synced data semantics with absolute im mutable ledger |
 
 ---
 
@@ -42,7 +43,7 @@ The platform supports exactly five core transaction types. Every event must be c
 * **`REFUND` (Credit / +):** Reverses a prior `PURCHASE` transaction. Money is returned to the user's wallet.
   * *Constraint:* Must contain a reference ID (`ref_txn_id`) pointing back to the original purchase transaction.
 * **`TRANSFER` (Double-Entry / Split):** Internal movement of money from one wallet account to another. 
-  * *Constraint:* Must generate exactly **two ledger entries** atomically: a `DEBIT` from the sender's account and a `CREDIT` to the receiver's account. Both entries must share a unique `transfer_id`.
+  * *Constraint:* Must generate exactly **two ledger entries** atomically: a `DEBIT` row from the sender's account and a `CREDIT` row to the receiver's account sharing a unique `transfer_id`. Both rows store absolute positive values, with impact driven by directional metadata.
 * **`ADJUSTMENT` (Manual Correction):** Executed exclusively by system administrators or customer operations to correct technical anomalies. Can be either a `CREDIT` or a `DEBIT`.
   * *Constraint:* Requires a mandatory audit reason text field and an administrator ID.
 
@@ -67,8 +68,8 @@ The data platform enforces a strict **write-once, read-many** policy.
 * Human errors or system glitches must be resolved by issuing a counter-balancing transaction (`REFUND`, `REVERSAL`, or `ADJUSTMENT`), never by editing history.
 
 ### Pillar 2: Balance Derivation
-A wallet's balance is not the absolute source of truth; it is merely a representation of the ledger's history. The platform must compute the balance at any given timestamp $T$ using the deterministic formula:
+A wallet's balance is not the absolute source of truth; it is merely a mathematical representation of the ledger's history. The platform computes the balance at any given timestamp $T$ using a deterministic sign-multiplied accumulation:
 
-$$Balance_T = \sum (Credits) - \sum (Debits)$$
+$$Balance_T = \sum (amount \times direction\_sign)$$
 
-Any snapshot or cached balance stored in the analytical layer must be completely reproducible by replaying the ledger entries from day zero up to timestamp $T$.
+Where $direction\_sign$ evaluates to $+1$ for `CREDIT` and $-1$ for `DEBIT`. Any snapshot or cached balance stored in the analytical layer must be completely reproducible by replaying the ledger entries from day zero up to timestamp $T$.
