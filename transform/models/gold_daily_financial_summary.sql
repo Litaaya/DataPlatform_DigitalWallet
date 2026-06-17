@@ -5,6 +5,7 @@
 
 WITH silver_data AS (
     SELECT * FROM {{ ref('silver_wallet_transactions') }}
+    WHERE is_valid = TRUE
 )
 
 SELECT

@@ -11,7 +11,7 @@ WITH debit_side AS (
         amount AS debit_amount,
         transaction_at AS transfer_at
     FROM {{ ref('silver_wallet_transactions') }}
-    WHERE transaction_type = 'TRANSFER' AND direction = 'DEBIT'
+    WHERE transaction_type = 'TRANSFER' AND direction = 'DEBIT' AND is_valid = TRUE
 ),
 
 credit_side AS (
@@ -21,7 +21,7 @@ credit_side AS (
         customer_id AS receiver_customer,
         amount AS credit_amount
     FROM {{ ref('silver_wallet_transactions') }}
-    WHERE transaction_type = 'TRANSFER' AND direction = 'CREDIT'
+    WHERE transaction_type = 'TRANSFER' AND direction = 'CREDIT' AND is_valid = TRUE
 )
 
 SELECT
