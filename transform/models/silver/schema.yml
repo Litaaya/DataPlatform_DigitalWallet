@@ -14,10 +14,3 @@ models:
         description: "The amount generated from the transaction"
         tests:
           - not_null
-
-  - name: gold_ledger_reconciliation
-    description: "Double-entry bookkeeping reconciliation is used to detect cash flow discrepancies"
-    columns:
-      - name: transfer_id
-        tests:
-          - not_null
