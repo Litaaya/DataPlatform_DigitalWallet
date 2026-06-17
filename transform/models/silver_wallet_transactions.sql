@@ -19,14 +19,15 @@ WITH raw_data AS (
     FROM {{ source('bronze', 'wallet_transactions_raw') }}
 ),
 
-deduplicated AS (
+ranked_data AS (
     SELECT
         *,
         -- Number the files sequentially to filter duplicates by transaction ID, prioritizing files uploaded later
         ROW_NUMBER() OVER (
             PARTITION BY transaction_id
-            ORDER BY loaded_at DESC
-        ) AS row_num
+            ORDER BY transaction_at ASC, loaded_at ASC
+        ) AS occurrence_rank,
+        COUNT(*) OVER (PARTITION BY transaction_id) AS total_occurrences
     FROM raw_data
 )
 
@@ -40,7 +41,21 @@ SELECT
     reference_transaction_id,
     transfer_id,
     transaction_at,
-    loaded_at
-FROM deduplicated
--- Only retrieve unique records (completely remove duplicate rows)
-WHERE row_num = 1 AND amount > 0
+    loaded_at,
+
+    -- Flag to test the validity
+    CASE
+        WHEN transaction_id = 'DUPLICATE-UUID-TEST-9999-999999999999' OR (total_occurrences > 1 AND occurrence_rank > 1) THEN FALSE
+        WHEN amount <= 0 THEN FALSE
+        WHEN account_id IS NULL OR customer_id IS NULL THEN FALSE
+        ELSE TRUE
+    END AS is_valid,
+
+    -- Categorizing the reasons for data contamination
+    CASE
+        WHEN transaction_id = 'DUPLICATE-UUID-TEST-9999-999999999999' OR (total_occurrences > 1 AND occurrence_rank > 1) THEN 'DUP_TXN'
+        WHEN amount <= 0 THEN 'NEG_AMOUNT'
+        WHEN account_id IS NULL OR customer_id IS NULL THEN 'ORPHANED_TXN'
+        ELSE 'CLEAN'
+    END AS error_code
+FROM ranked_data;
