@@ -5,5 +5,5 @@ models:
     description: "Double-entry bookkeeping reconciliation is used to detect cash flow discrepancies"
     columns:
       - name: transfer_id
-        tests:
+        data_tests:
           - not_null

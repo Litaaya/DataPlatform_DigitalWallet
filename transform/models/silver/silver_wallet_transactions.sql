@@ -58,4 +58,4 @@ SELECT
         WHEN account_id IS NULL OR customer_id IS NULL THEN 'ORPHANED_TXN'
         ELSE 'CLEAN'
     END AS error_code
-FROM ranked_data;
+FROM ranked_data
