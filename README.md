@@ -1,6 +1,6 @@
 # Digital Wallet Data Platform (Fintech Case Study)
 
-An end-to-end production-grade data platform designed for a single-currency (USD) Digital Wallet. This project focuses on solving core financial data engineering challenges: **Ledger Immutability**, **Deterministic Balance Derivation**, and **Automated Daily Reconciliation**.
+Built a production-oriented digital wallet data platform prototype using Kafka, Kafka Connect, MinIO, PostgreSQL, dbt, and Airflow, implementing append-only raw ingestion, validated Silver models, deterministic wallet balance reconstruction, and double-entry transfer reconciliation.
 
 ---
 
