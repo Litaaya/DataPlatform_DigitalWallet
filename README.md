@@ -1,127 +1,287 @@
-# Digital Wallet Data Platform (Fintech Case Study)
+# Digital Wallet Data Platform
 
-Built a production-oriented digital wallet data platform prototype using Kafka, Kafka Connect, MinIO, PostgreSQL, dbt, and Airflow, implementing append-only raw ingestion, validated Silver models, deterministic wallet balance reconstruction, and double-entry transfer reconciliation.
+An end-to-end **Digital Wallet Data Platform** built as a fintech data engineering case study.
 
----
+The project simulates wallet transaction events, ingests them through Kafka, lands raw JSON files into MinIO, loads raw data into PostgreSQL, transforms the data with dbt, and builds Silver/Gold analytical models for ledger reconstruction, daily balance snapshots, financial summaries, reconciliation checks, and BI reporting.
 
-## Data Architecture
+## Project Goals
 
-The platform implements a Medallion Architecture combining real-time streaming ingestion and batch ELT processing:
+This project focuses on core data engineering problems in financial systems:
+
+- Append-only raw transaction ingestion
+- Data quality validation and invalid-record handling
+- Deterministic wallet balance calculation from ledger history
+- Double-entry logic for wallet-to-wallet transfers
+- Daily financial reconciliation
+- Analytics-ready Gold models for BI dashboards
+
+## Architecture
 
 ```mermaid
 graph LR
-    classDef appStyle fill:#f9f9f9,stroke:#333,stroke-width:2px;
-    classDef streamingStyle fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
-    classDef storageStyle fill:#efebe9,stroke:#5d4037,stroke-width:2px;
-    classDef dbtStyle fill:#fbe9e7,stroke:#e64a19,stroke-width:2px;
-    classDef dbStyle fill:#e8f5e9,stroke:#388e3c,stroke-width:2px;
-    classDef biStyle fill:#fffde7,stroke:#fbc02d,stroke-width:2px;
+    App["Transaction Generator"] --> Kafka["Apache Kafka"]
+    Kafka --> Connect["Kafka Connect S3 Sink"]
+    Connect --> MinIO["MinIO Data Lake<br/>Raw JSON Files"]
 
-    App["Raw Events (App)"]:::appStyle
-    
-    subgraph Streaming_Layer ["Streaming Ingestion"]
-        Kafka["Apache Kafka"]:::streamingStyle
-        KConnect["Kafka Connect <br> (S3 Sink)"]:::streamingStyle
-    end
+    MinIO --> Loader["Python Loader"]
+    Loader --> Raw["PostgreSQL Raw Layer"]
 
-    subgraph Storage_Layer ["Data Lake (Bronze)"]
-        MinIO["MinIO <br> (JSON Files)"]:::storageStyle
-    end
+    Raw --> Bronze["dbt Bronze Models"]
+    Bronze --> Silver["dbt Silver Models<br/>Cleaned & Validated Transactions"]
+    Silver --> Gold["dbt Gold Models<br/>Ledger, Balances, Reconciliation"]
 
-    subgraph Transformation_Layer ["Batch ELT (Medallion)"]
-        direction TB
-        Loader["Python Loader"]:::dbtStyle
-        Silver["Silver Stage <br> (Cleaned Data)"]:::dbtStyle
-        Gold["Gold Stage <br> (Ledger & Recon)"]:::dbtStyle
-        
-        Loader --> Silver
-        Silver -->|dbt + Postgres| Gold
-    end
+    Gold --> BI["Power BI / Metabase Dashboard"]
 
-    subgraph Serving_Layer ["Data Mart / Serving"]
-        Postgres[("Postgres <br> (Mart / Serving)")]:::dbStyle
-    end
-
-    subgraph BI_Layer ["Visualization"]
-        BI["Metabase / PowerBI"]:::biStyle
-    end
-
-    App --> Kafka
-    Kafka --> KConnect
-    KConnect --> MinIO
-    MinIO --> Loader
-    Gold --> Postgres
-    Postgres --> BI
-
-    style Streaming_Layer fill:#f6fafd,stroke:#0288d1,stroke-dasharray: 5 5
-    style Storage_Layer fill:#faf8f7,stroke:#5d4037,stroke-dasharray: 5 5
-    style Transformation_Layer fill:#fffbfb,stroke:#e64a19,stroke-dasharray: 5 5
-    style Serving_Layer fill:#f7fbf7,stroke:#388e3c,stroke-dasharray: 5 5
+    Airflow["Apache Airflow"] --> Loader
+    Airflow --> Gold
 ```
 
-## Documentation:
-For detailed business requirements, accounting rules, and constraints:
-- [Business Problem and Scopes](docs/problem_and_scope.md)
-- [Data Invariants and Quality Rules](docs/invariants.md)
-- [Data Model: Schema Design](docs/data_model.md)
-- [Data Model: Balance Logic](docs/balance_logic.md)
+## Tech Stack
 
-## Tech Stack and Core Concepts
-- Infrastructure: Docker & WSL2 (Ubuntu) for localized environment orchestration.
-- Streaming Ingestion: Apache Kafka & Kafka UI for event streaming; Kafka Connect (S3 Sink) for landing raw events.
-- Storage / Data Lake: MinIO (S3-compatible object storage) storing append-only historical raw JSON logs.
-- Compute / Transformation: PostgreSQL acting as the local Data Warehouse, managed dynamically by dbt (Data Build Tool) for modular SQL modeling, schema isolation, and data lineages.
-- Orchestration: Apache Airflow (Standalone) automating and managing dependency workflows.
-- Data Quality & Audit: Built-in dbt data tests alongside custom Double-Entry Ledger Reconciliation pipelines.
+| Layer           | Technologies                       |
+|-----------------|------------------------------------|
+| Data Generation | Python                             |
+| Streaming       | Apache Kafka, Kafka UI             |
+| Raw Landing     | Kafka Connect S3 Sink, MinIO       |
+| Warehouse       | PostgreSQL                         |
+| Transformation  | dbt, SQL                           |
+| Orchestration   | Apache Airflow                     |
+| BI / Reporting  | Power BI / Metabase                |
+| Infrastructure  | Docker, Docker Compose, PowerShell |
+
+## Repository Structure
+
+```text
+.
+├── dags/                  # Airflow DAG for pipeline orchestration
+├── docs/                  # Business rules, invariants, schema design, balance logic
+├── generator/             # Python transaction event generator
+├── infra/                 # Docker Compose, Kafka Connect, MinIO sink config
+├── loader/                # Python loader from MinIO raw files to PostgreSQL
+├── transform/             # dbt project: Bronze, Silver, Gold models and tests
+├── .env.example           # Environment variable template
+├── run.ps1                # Helper script for platform startup/shutdown
+└── README.md
+```
+
+## Business Scope
+
+The platform models a single-currency USD digital wallet system.
+
+Supported transaction types:
+
+| Transaction Type | Meaning                                                     |
+|------------------|-------------------------------------------------------------|
+| `TOPUP`          | Money enters the wallet from an external source             |
+| `PURCHASE`       | Money leaves the wallet for payment                         |
+| `REFUND`         | Money is returned for a previous purchase                   |
+| `TRANSFER`       | Internal wallet-to-wallet movement using double-entry logic |
+| `ADJUSTMENT`     | Manual correction with audit reason                         |
+
+Out of scope:
+
+- Multi-currency wallets
+- Loyalty or rewards points
+- Real-time fraud blocking
+- Overdraft / negative balance support
+
+## Data Layers
+
+### Raw / Bronze
+
+Stores raw transaction events landed from Kafka into MinIO and loaded into PostgreSQL.
+
+Main purpose:
+
+- Preserve original JSON payloads
+- Keep ingestion metadata
+- Support replayability and audit traceability
+
+### Silver
+
+Cleans, parses, and validates raw transactions.
+
+Main responsibilities:
+
+- Type casting
+- Deduplication by `transaction_id`
+- Amount validation
+- Required-field validation
+- Transaction status normalization
+- Refund reference validation
+- Invalid-record quarantine / flagging
+
+### Gold
+
+Builds business-facing financial models.
+
+Main outputs:
+
+- Immutable ledger entries
+- Daily wallet balance snapshots
+- Daily financial summaries
+- Reconciliation results
+- BI-ready reporting tables
+
+## Key Data Quality Rules
+
+The platform applies validation rules such as:
+
+- `transaction_id` must be unique
+- `amount` must be greater than zero
+- Required fields must not be null
+- `REFUND` transactions must reference a valid previous purchase
+- `TRANSFER` transactions must produce balanced debit and credit entries
+- Derived wallet balance must not become negative
+- Invalid transactions are excluded from Gold financial outputs
+
+## Balance Logic
+
+Wallet balances are not directly updated or treated as the source of truth.
+
+Instead, balances are derived from ledger entries:
+
+```text
+Balance = Sum(CREDIT amounts) - Sum(DEBIT amounts)
+```
+
+Daily balance snapshots are calculated from historical ledger movements, making the final account balance reproducible from transaction history.
+
+Recommended ledger convention:
+
+- `amount` is stored as a positive value.
+- `direction` identifies whether the movement is `DEBIT` or `CREDIT`.
+- `signed_amount` can be derived as a reporting/calculation field.
+
+## Reconciliation Logic
+
+The Gold layer includes reconciliation models to verify financial consistency.
+
+Examples:
+
+- Compare total debit and credit movements
+- Check transfer debit-credit balancing
+- Count invalid or quarantined transactions
+- Identify unresolved financial differences
+- Produce daily reconciliation status
+
+## Orchestration
+
+Apache Airflow coordinates the batch side of the pipeline:
+
+1. Load raw JSON files from MinIO into PostgreSQL
+2. Run dbt Bronze models
+3. Run dbt Silver models
+4. Run dbt Gold models
+5. Run dbt tests and reconciliation checks
+6. Refresh BI-ready output tables
+
+## BI Dashboard
+
+Phase 8 adds a reporting layer connected to the PostgreSQL Gold models.
+
+The dashboard is designed to monitor:
+
+- Total transaction volume
+- Transaction count by type
+- Daily debit and credit movement
+- Wallet balance snapshots
+- Invalid transaction count
+- Reconciliation status
+- Transfer balancing issues
+
+Suggested dashboard pages:
+
+| Page                | Purpose                                                            |
+|---------------------|--------------------------------------------------------------------|
+| Executive Overview  | High-level transaction volume, value, and daily trend              |
+| Transaction Quality | Invalid transactions, validation failures, and quarantine summary  |
+| Ledger & Balance    | Daily wallet balance movement and ledger-based balance snapshots   |
+| Reconciliation      | Debit-credit checks, transfer balancing, and reconciliation status |
 
 ## Setup
-```
-# Spin up the entire Data Platform (Kafka, MinIO, Postgres, Airflow)
-.\run.ps1 up
 
-# Shut down and clean up resources
+### 1. Create environment file
+
+Copy the example environment file:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Update credentials and connection values if needed.
+
+### 2. Start the platform
+
+```powershell
+.\run.ps1 up
+```
+
+This starts the local data platform services, including Kafka, MinIO, PostgreSQL, Kafka Connect, and Airflow.
+
+### 3. Stop the platform
+
+```powershell
 .\run.ps1 down
 ```
-- Access the Airflow UI at http://localhost:8085 to monitor the automated pipeline.
+
+## Useful Local Services
+
+| Service             | Purpose                            |
+|---------------------|------------------------------------|
+| Kafka UI            | Monitor Kafka topics and messages  |
+| MinIO Console       | Inspect raw landed JSON files      |
+| PostgreSQL          | Query Raw, Silver, and Gold tables |
+| Airflow UI          | Monitor pipeline orchestration     |
+| Power BI / Metabase | Visualize Gold-layer outputs       |
 
 ## Roadmap and Progress
-- **Phase 1: Definition & Data Semantics**
-  - [x] 1.1 Business Scope: Defined core entities and 5 transaction types. (`docs/problem_and_scope.md`)
-  - [x] 1.2 Invariants Checklist: Formulated data integrity rules. (`docs/invariants.md`)
 
-- **Phase 2: Data Model Layer**
-  - [x] 2.1 Schema Design: Drafted Medallion architecture (Bronze/Silver/Gold). (`docs/data_model.md`)
-  - [x] 2.2 Balance Logic: Designed pseudo-SQL for historical balance derivation. (`docs/balance_logic.md`)
+| Phase   | Scope                                                      | Status      |
+|---------|------------------------------------------------------------|-------------|
+| Phase 1 | Business scope and data semantics                          | Completed   |
+| Phase 2 | Data model and balance logic design                        | Completed   |
+| Phase 3 | Docker infrastructure skeleton                             | Completed   |
+| Phase 4 | Transaction generator                                      | Completed   |
+| Phase 5 | Kafka ingestion and MinIO landing                          | Completed   |
+| Phase 6 | Python loader, dbt Silver/Gold models, data quality checks | Completed   |
+| Phase 7 | Airflow orchestration                                      | Completed   |
+| Phase 8 | BI dashboard and reporting layer                           | Uncompleted |
 
-- **Phase 3: Platform Skeleton (Infra)**
-  - [x] 3.1 Repo Setup: Initialized WSL2, directory structure, and environment configs.
-  - [x] 3.2 Docker Compose: Containers for Kafka, Kafka Connect, MinIO, and Postgres are up and running.
+## Documentation
 
-- **Phase 4: Data Generation**
-  - [x] 4.1 Generator Spec: Event JSON v1 schema defined with double-entry and anomaly injection logic.
-  - [x] 4.2 Python Producer: Capable of streaming valid/invalid transactions into Kafka.
+Detailed documentation is available in the `docs/` folder:
 
-- **Phase 5: Streaming Ingestion (Data Lake)**
-  - [x] 5.1 S3 Sink: Configured Kafka Connect S3 Sink to stream real-time data into MinIO partition by date.
-  - [x] 5.2 Observability: Monitoring data pipeline and connector status via Kafka UI.
+| Document                    | Description                                                      |
+|-----------------------------|------------------------------------------------------------------|
+| `docs/problem_and_scope.md` | Business problem, supported transaction types, and project scope |
+| `docs/invariants.md`        | System-wide data quality rules and financial invariants          |
+| `docs/data_model.md`        | Medallion architecture, ERD, and schema design                   |
+| `docs/balance_logic.md`     | Balance derivation and daily snapshot calculation logic          |
+| `docs/bi_dashboard.md`      | BI dashboard scope, pages, metrics, and Gold model usage         |
 
-- **Phase 6: Batch ELT & Data Warehousing (Python + dbt + PostgreSQL)**
-  - [x] 6.1 Bronze Layer (Raw Ingestion): Developed an idempotent Python script (`loader/main.py`) to bulk load raw JSON from MinIO to Postgres `raw` schema.
-  - [x] 6.2 dbt Environment Setup: Initializing dbt project and configuring `profiles.yml` for PostgreSQL warehouse connection.
-  - [x] 6.3 Silver Layer (Transformation): Implement deduplication (handling duplicate UUIDs), filtering negative amounts, and strict type casting using dbt models.
-  - [x] 6.4 Gold Layer (Analytics Marts): Build double-entry ledger reconstruction and daily financial volume aggregations.
-  - [x] 6.5 Data Quality & Auditing: Pass automated dbt tests (`unique`, `not_null`, `accepted_values`) and data reconciliation logic.
+## Project Highlights
 
-- **Phase 7: Pipeline Orchestration**
-  - [x] 7.1 DAG Scheduling: Automate and orchestrate the Python loader and dbt transformation runs via Apache Airflow.
+- Built a full local data platform using Docker-based infrastructure
+- Simulated fintech wallet transactions with valid and invalid cases
+- Implemented Kafka-based streaming ingestion into a raw object storage layer
+- Loaded append-only raw JSON data into PostgreSQL for ELT processing
+- Built dbt Silver models for cleansing, validation, and invalid-record handling
+- Built dbt Gold models for ledger entries, balance snapshots, financial summaries, and reconciliation
+- Orchestrated loader and dbt workflows with Airflow
+- Prepared BI-ready Gold tables for dashboard reporting
 
-- **Phase 8: Business Intelligence & Visualization**
-  - [ ] 8.1 Financial Dashboard: Connect Metabase/PowerBI to PostgreSQL Gold layer to build a real-time audit monitor.
+## Resume Description
 
-## Convention Commits Rule
-- [FEAT] - New features/pipelines.
-- [FIX] - Bug fixes.
-- [CONFIG] - Infra or project setup updates.
-- [DOCS] - Documentation updates.
-- [TEST] - Adding/updating quality tests.
-- [REFACTOR] - Code restructuring without logic changes.
+Built an end-to-end data platform for simulated digital wallet transactions, focusing on raw ingestion, data quality control, ledger-based balance calculation, and financial reconciliation.
+
+**Tech Stack:** Python, Apache Kafka, Kafka Connect, MinIO, PostgreSQL, dbt, Apache Airflow, Docker, SQL, PowerShell, Power BI.
+
+**Key Features:**
+
+- Designed a data pipeline for ingesting, validating, transforming, and modeling simulated digital wallet transactions.
+- Built a Kafka-based ingestion flow and Python loader to move raw JSON transaction data from MinIO into PostgreSQL with ingestion logging.
+- Implemented dbt Silver models for data cleansing, deduplication, validation, and invalid-record quarantine.
+- Built Gold models for immutable ledger entries, daily balance snapshots, financial summaries, and reconciliation results.
+- Added data quality checks for duplicate transactions, invalid amounts, missing fields, refund references, and transfer debit-credit balancing.
+- Prepared BI-ready Gold datasets for financial monitoring and reconciliation dashboards.
