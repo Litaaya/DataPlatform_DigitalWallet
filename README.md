@@ -58,6 +58,7 @@ graph LR
 ├── generator/             # Python transaction event generator
 ├── infra/                 # Docker Compose, Kafka Connect, MinIO sink config
 ├── loader/                # Python loader from MinIO raw files to PostgreSQL
+├── reports/               # Screenshots and PowerBI file for dashboards
 ├── transform/             # dbt project: Bronze, Silver, Gold models and tests
 ├── .env.example           # Environment variable template
 ├── run.ps1                # Helper script for platform startup/shutdown
@@ -237,16 +238,16 @@ This starts the local data platform services, including Kafka, MinIO, PostgreSQL
 
 ## Roadmap and Progress
 
-| Phase   | Scope                                                      | Status      |
-|---------|------------------------------------------------------------|-------------|
-| Phase 1 | Business scope and data semantics                          | Completed   |
-| Phase 2 | Data model and balance logic design                        | Completed   |
-| Phase 3 | Docker infrastructure skeleton                             | Completed   |
-| Phase 4 | Transaction generator                                      | Completed   |
-| Phase 5 | Kafka ingestion and MinIO landing                          | Completed   |
-| Phase 6 | Python loader, dbt Silver/Gold models, data quality checks | Completed   |
-| Phase 7 | Airflow orchestration                                      | Completed   |
-| Phase 8 | BI dashboard and reporting layer                           | Uncompleted |
+| Phase   | Scope                                                      | Status    |
+|---------|------------------------------------------------------------|-----------|
+| Phase 1 | Business scope and data semantics                          | Completed |
+| Phase 2 | Data model and balance logic design                        | Completed |
+| Phase 3 | Docker infrastructure skeleton                             | Completed |
+| Phase 4 | Transaction generator                                      | Completed |
+| Phase 5 | Kafka ingestion and MinIO landing                          | Completed |
+| Phase 6 | Python loader, dbt Silver/Gold models, data quality checks | Completed |
+| Phase 7 | Airflow orchestration                                      | Completed |
+| Phase 8 | BI dashboard and reporting layer                           | Completed |
 
 ## Documentation
 
@@ -260,28 +261,12 @@ Detailed documentation is available in the `docs/` folder:
 | `docs/balance_logic.md`     | Balance derivation and daily snapshot calculation logic          |
 | `docs/bi_dashboard.md`      | BI dashboard scope, pages, metrics, and Gold model usage         |
 
-## Project Highlights
+## PowerBI dashboards
 
-- Built a full local data platform using Docker-based infrastructure
-- Simulated fintech wallet transactions with valid and invalid cases
-- Implemented Kafka-based streaming ingestion into a raw object storage layer
-- Loaded append-only raw JSON data into PostgreSQL for ELT processing
-- Built dbt Silver models for cleansing, validation, and invalid-record handling
-- Built dbt Gold models for ledger entries, balance snapshots, financial summaries, and reconciliation
-- Orchestrated loader and dbt workflows with Airflow
-- Prepared BI-ready Gold tables for dashboard reporting
+### Daily financial summary
 
-## Resume Description
+![Daily financial summary](reports/screenshots/Page_1_daily_financial_summary.png)
 
-Built an end-to-end data platform for simulated digital wallet transactions, focusing on raw ingestion, data quality control, ledger-based balance calculation, and financial reconciliation.
+### Ledger reconciliation
 
-**Tech Stack:** Python, Apache Kafka, Kafka Connect, MinIO, PostgreSQL, dbt, Apache Airflow, Docker, SQL, PowerShell, Power BI.
-
-**Key Features:**
-
-- Designed a data pipeline for ingesting, validating, transforming, and modeling simulated digital wallet transactions.
-- Built a Kafka-based ingestion flow and Python loader to move raw JSON transaction data from MinIO into PostgreSQL with ingestion logging.
-- Implemented dbt Silver models for data cleansing, deduplication, validation, and invalid-record quarantine.
-- Built Gold models for immutable ledger entries, daily balance snapshots, financial summaries, and reconciliation results.
-- Added data quality checks for duplicate transactions, invalid amounts, missing fields, refund references, and transfer debit-credit balancing.
-- Prepared BI-ready Gold datasets for financial monitoring and reconciliation dashboards.
+![Ledger reconciliation](reports/screenshots/Page_2_ledger_reconciliation.png)
